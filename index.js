@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
+const ObjectId = require('mongodb').ObjectId;
 const port = process.env.PORT || 5000;
 
 
@@ -17,46 +18,93 @@ async function run() {
         await client.connect();
         const database = client.db("Motors");
         const productsCollection = database.collection("products");
+        const ordersCollection = database.collection('orders');
         const usersCollection = database.collection('users');
 
-        app.get('/products', async(req,res)=>{
+        app.get('/products', async (req, res) => {
             const cursor = productsCollection.find({});
             const products = await cursor.toArray();
             res.json(products);
         });
 
-        app.post('/products', async(req, res)=>{
+        app.post('/products', async (req, res) => {
             const product = req.body;
             // console.log('hit api', product);            
             const result = await productsCollection.insertOne(product);
-            console.log(result);
+            // console.log(result);
+            res.json(result);
+        });
+
+        app.get('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log('loaded user', id);
+            const query = { _id: ObjectId(id) };
+            const product = await productsCollection.findOne(query);
+            res.send(product);
+        });
+
+        app.delete('/products/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await productsCollection.deleteOne(query);
+
+            // console.log('deleting', result);
+
+            res.json(result);
+        });
+
+
+
+
+        app.get('/orders', async (req, res) => {
+            const cursor = ordersCollection.find({});
+            const products = await cursor.toArray();
+            res.json(products);
+        });
+
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            console.log('hit api');            
+            const result = await ordersCollection.insertOne(order);
+            // console.log(result);
             res.json(result);
         })
 
+        app.delete('/orders/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await ordersCollection.deleteOne(query);
+
+            // console.log('deleting', result);
+
+            res.json(result);
+        });
 
 
-        app.get('/users/:email', async(req,res)=>{
+
+
+        app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
-            const query = {email: email};
+            const query = { email: email };
             const user = await usersCollection.findOne(query);
             let isAdmin = false;
-            if(user?.role === 'admin'){
+            if (user?.role === 'admin') {
                 isAdmin = true;
             }
-            res.json({admin: isAdmin});
+            res.json({ admin: isAdmin });
         })
 
         app.post('/users', async (req, res) => {
             const user = req.body;
             const result = await usersCollection.insertOne(user);
-            console.log(result);
+            // console.log(result);
             res.json(result);
         });
 
-        app.put('/users/admin', async(req, res) => {
+        app.put('/users/admin', async (req, res) => {
             const user = req.body;
-            const filter = {email: user.email};
-            const updateDoc = {$set: {role: 'admin'}};
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
             const result = await usersCollection.updateOne(filter, updateDoc);
             res.json(result);
         });
