@@ -20,10 +20,18 @@ async function run() {
         const productsCollection = database.collection("products");
         const ordersCollection = database.collection('orders');
         const usersCollection = database.collection('users');
+        const reviewsCollection = database.collection('reviews');
 
         app.get('/products', async (req, res) => {
             const cursor = productsCollection.find({});
             const products = await cursor.toArray();
+            res.json(products);
+        });
+
+        // products for home page 
+        app.get('/homeProducts', async (req, res) => {
+            const cursor = productsCollection.find({});
+            const products = await cursor.limit(6).toArray();
             res.json(products);
         });
 
@@ -90,7 +98,26 @@ async function run() {
         });
 
 
+        // start review section 
 
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            // console.log('hit api', product);            
+            const result = await reviewsCollection.insertOne(review);
+            // console.log(result);
+            res.json(result);
+        });
+
+        app.get('/reviews', async (req, res) => {
+            const cursor = reviewsCollection.find({});
+            const products = await cursor.toArray();
+            res.json(products);
+        });
+
+
+
+
+        // start users section 
 
         app.get('/users/:email', async (req, res) => {
             const email = req.params.email;
