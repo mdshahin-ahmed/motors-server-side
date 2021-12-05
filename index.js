@@ -37,7 +37,7 @@ async function run() {
 
         app.get('/products/:id', async (req, res) => {
             const id = req.params.id;
-            console.log('loaded user', id);
+            // console.log('loaded user', id);
             const query = { _id: ObjectId(id) };
             const product = await productsCollection.findOne(query);
             res.send(product);
@@ -62,9 +62,18 @@ async function run() {
             res.json(products);
         });
 
+        app.get('/userOrders', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email }
+            console.log(query);
+            const cursor = ordersCollection.find(query);
+            const products = await cursor.toArray();
+            res.json(products);
+        });
+
         app.post('/orders', async (req, res) => {
             const order = req.body;
-            console.log('hit api');            
+            // console.log('hit api');            
             const result = await ordersCollection.insertOne(order);
             // console.log(result);
             res.json(result);
